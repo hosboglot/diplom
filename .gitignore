@@ -73,3 +73,9 @@ CMakeLists.txt.user*
 *.dll
 *.exe
 
+# other
+*.mp4
+*.pptx
+report
+.venv
+.vscode
