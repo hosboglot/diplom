@@ -77,5 +77,6 @@ CMakeLists.txt.user*
 *.mp4
 *.pptx
 report
+frames
 .venv
 .vscode

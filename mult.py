@@ -1,100 +1,54 @@
 import numpy as np
 import pyqtgraph as pg
-import pyqtgraph.exporters
+
+from pgplotter import Plotter, Line
+
+# ffmpeg.exe -r 30 -i frames/frame_%04d.png -vcodec libx264 -crf 25 -pix_fmt yuv420p output.mp4
 
 # y = C1*x^2 + C2*x^3
 A = (-3, 1)
-B = (-2, 2)
-C = (2, 1.5)
-C3s = [0, -1, -0.5]
+Bs = [(1., -0.4), (0.75, 1.), (1.4, 0.8)]
+C = (2., 1.5)
 
-C2 = (A[0]**2 * B[1] - A[1] * B[0]**2) / (A[0]**2 * B[0]**2 * (B[0] - A[0]))
-C1 = (A[1] - C2*A[0]**3) / A[0]**2
-left_f = lambda x: C1*x**2 + C2*x**3
-right_f = lambda x, C3: ((C[1] - C3*C[0]**3) / C[0]**2)*x**2 + C3*x**3
+class EulerLine(Line):
+    def __init__(self, B: tuple[float, float], *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.B = B
+        self.C = C
 
-app = pg.mkQApp()
-pg.setConfigOption('background', 'w')  # Устанавливаем светлую тему
-pg.setConfigOption('foreground', 'k')
+        self.C2 = (self.B[0]**2 * self.C[1] - self.B[1] * self.C[0]**2) / \
+                (self.B[0]**2 * self.C[0]**2 * (self.C[0] - self.B[0]))
+        self.C1 = (self.B[1] - self.C2*self.B[0]**3) / self.B[0]**2
 
-class Plotter:
-    def __init__(self):
-        self.left, self.right = -4, 4
-        self.down, self.up = -5, 5
-        self.step = 0.02
+    def make_right(self, *args, **kwargs):
+        line = EulerLine(self.B, *args, **kwargs)
+        line.C1 = self.C1
+        line.C2 = (A[1] - self.C1*A[0]**2) / A[0]**3
+        return line
 
-        self.x_range_left = np.hstack((np.arange(self.left, 0, self.step), [0]))
-        self.x_range_right = np.arange(0, self.right, self.step)
-        self.x_range = np.hstack((self.x_range_left, self.x_range_right))
-        
-        self.left_printed = False
-        self.right_printed = [False for _ in range(len(C3s))]
-        self.i = 0
-        self.I = 0
+    def __call__(self, x: float):
+        return self.C1 * x**2 + self.C2 * x**3
 
-        self.plot = pg.plot()
-        colors = ['c', 'g', 'b', 'r']  # Разные цвета для графиков
+plotter = Plotter((-4, 4, -5, 5), export=False)
 
-        for i in range(1 + len(C3s)):
-            self.plot.plot(pen=pg.mkPen(colors[i], width=3))
-            self.plot.plot([0], [0], pen=None, symbol='o')
+colors = ['g', 'b', 'r', 'c']
+right_lines = [
+    EulerLine(B, np.arange(0, 4, 0.02), point=True, pen=pg.mkPen(colors[i], width=3))
+    for i, B in enumerate(Bs)
+]
+left_line = right_lines[2].make_right(
+    np.arange(-4, 0, 0.02),
+    point=True, pen=pg.mkPen(colors[-1], width=3)
+)
 
-        self.plot.showGrid(x=True, y=True)
-        self.plot.setXRange(self.left, self.right)
-        self.plot.setYRange(self.down, self.up)
-        
-        # Добавляем статичные точки A, B, C
-        self.plot.plot([A[0]], [A[1]], pen=None, symbol='o', symbolBrush='k')
-        self.plot.plot([B[0]], [B[1]], pen=None, symbol='o', symbolBrush='k')
-        self.plot.plot([C[0]], [C[1]], pen=None, symbol='o', symbolBrush='k')
+plotter.add_line(left_line)
+for line in right_lines:
+    line.after = left_line
+    plotter.add_line(line)
 
-    def update(self):
-        if not self.left_printed:
-            self.plot.plotItem.dataItems[0].setData(
-                self.x_range_left[:self.i],
-                left_f(self.x_range_left[:self.i])
-            )
-            self.plot.plotItem.dataItems[1].setData(
-                [self.x_range_left[self.i]],
-                [left_f(self.x_range_left[self.i])]
-            )
-            if self.i + 1 == len(self.x_range_left):
-                self.left_printed = True
-                self.i = 0
-        else:
-            self.plot.plotItem.dataItems[0].setData(
-                self.x_range_left,
-                left_f(self.x_range_left)
-            )
-        
-            for i in range(len(C3s)):
-                if not self.right_printed[i]:
-                    self.plot.plotItem.dataItems[2 + 2*i].setData(
-                        self.x_range_right[:self.i],
-                        right_f(self.x_range_right[:self.i], C3s[i])
-                    )
-                    self.plot.plotItem.dataItems[2 + 2*i + 1].setData(
-                        [self.x_range_right[self.i]],
-                        [right_f(self.x_range_right[self.i], C3s[i])],
-                        pen=None, symbol='o'
-                    )
-                    if self.i + 1 == len(self.x_range_right):
-                        self.right_printed[i] = True
-                        # self.i = 0
-                    # break
-                else:
-                    self.plot.plotItem.dataItems[2 + 2*i].setData(
-                        self.x_range_right,
-                        right_f(self.x_range_right, C3s[i])
-                    )
-        # exporter = pyqtgraph.exporters.ImageExporter(self.plot.plotItem)
-        # exporter.export(f'frames/frame_{self.I:04d}.png')
-        self.i += 1
-        self.I += 1
+plotter.add_point(A, pg.mkBrush('k'))
+for i, B in enumerate(Bs):
+    plotter.add_point(B, pg.mkBrush(colors[i]))
+plotter.add_point(C, pg.mkBrush('k'))
 
-plotter = Plotter()
-
-timer = pg.QtCore.QTimer()
-timer.timeout.connect(plotter.update)
-timer.start(10)
-app.exec()
+plotter.start()

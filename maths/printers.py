@@ -125,7 +125,7 @@ def parametric_to_html(equation: EulerEquation):
             else:
                 cur += ' + '
 
-        if abs(coef.value) != 1:
+        if abs(coef.value) != 1 or coef.order == 0:
             cur += _try_int(abs(coef.value))
 
         if coef.order == 1:
