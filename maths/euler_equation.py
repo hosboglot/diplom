@@ -135,9 +135,9 @@ class EulerEquation:
                     for n in range(cond.order):
                         coefs *= roots
                         roots -= 1
-                    coefs *= point[0] ** roots
+                    coefs *= cond.x ** roots
                     X = np.vstack((X, coefs))
-                    Y = np.vstack((Y, [point[1]]))
+                    Y = np.vstack((Y, [cond.y]))
                 case ExtraCondition.Type.Point:
                     X = np.vstack((X, cond.x ** valid_roots))
                     Y = np.vstack((Y, [cond.y]))
