@@ -46,6 +46,8 @@ class EulerSolver(QObject):
         self.solutionReady.connect(self.resultChanged)
         self.solutionFail.connect(self.resultChanged)
 
+        self.coefficientsModelChanged.emit(self._coefficients_model)
+
     parametersChanged = Signal()
 
     coefficientsModelChanged = Signal(CoefficientsModel)
@@ -157,8 +159,17 @@ class EulerSolver(QObject):
         result = self._equation.solutionResult()
         if result:
             return printer.solution_to_html(self._equation)
-        else:
-            return result.description
+        if result.reason == result.NoFirstCoeffs or result.reason == result.NoSecondCoeffs:
+            desc = printer.common_solution_to_html(self._equation)
+            if result.reason == result.NoFirstCoeffs:
+                desc += '''<br>Не удается определить коэффициенты первого решения.'''
+                return desc
+            desc += '<br>'
+            desc += printer.first_solution_to_html(self._equation)
+            desc += '''<br>Не удается определить коэффициенты второго решения.'''
+            return desc
+
+        return result.description
 
     @Property(str, notify=parametricEquationChanged)
     def parametricHtml(self):

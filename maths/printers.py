@@ -75,10 +75,9 @@ def coefficients_to_html(coefficients: list[Coefficient]) -> str:
         return result + ' = 0'
 
 
-def solution_to_html(equation: EulerEquation):
-    def _print_coefs(vars: list[float], roots: list[float]):
+def _print_coefs(vars: list[float] | None, roots: list[float]):
         cur = ''
-        for n, c, r in zip(range(len(vars)), vars, roots):
+        for n, c, r in zip(range(len(roots)), vars or range(len(roots)), roots):
             if c < 0:
                 if n == 0:
                     cur += '-'
@@ -90,17 +89,36 @@ def solution_to_html(equation: EulerEquation):
                 else:
                     cur += ' + '
 
-            if abs(c) != 1:
-                cur += f"{_try_int(abs(c))}"
+            if abs(c) != 1 or vars is None:
+                cur += f"{_try_int(abs(c))}" if vars else f"C<sub>{n+1}</sub>"
 
             cur += f"x<sup>{_try_int(r)}</sup>"
         return cur
 
-    result = '1) y = '
+def common_solution_to_html(equation: EulerEquation):
     roots = equation.parametricRootsBiggerThanOrder()
+    result = 'Общий вид: y = '
+    result += _print_coefs(None, roots)
+    return result
+
+def first_solution_to_html(equation: EulerEquation):
+    roots = equation.parametricRootsBiggerThanOrder()
+    result = '1) y = '
     result += _print_coefs(equation.firstVariadics(), roots)
-    result += '<br>2) y = '
+    return result
+
+def second_solution_to_html(equation: EulerEquation):
+    roots = equation.parametricRootsBiggerThanOrder()
+    result = '2) y = '
     result += _print_coefs(equation.secondVariadics(), roots)
+    return result
+
+def solution_to_html(equation: EulerEquation):
+    result = common_solution_to_html(equation)
+    result += '<br>'
+    result += first_solution_to_html(equation)
+    result += '<br>'
+    result += second_solution_to_html(equation)
 
     return result
 
@@ -129,11 +147,11 @@ def parametric_to_html(equation: EulerEquation):
             cur += _try_int(abs(coef.value))
 
         if coef.order == 1:
-            cur += 'm<sup></sup>'
+            cur += 'λ<sup></sup>'
         elif coef.order == 0:
             cur += ''
         else:
-            cur += 'm<sup>' + str(coef.order) + '</sup>'
+            cur += 'λ<sup>' + str(coef.order) + '</sup>'
 
         result += cur
 

@@ -39,7 +39,7 @@ Rectangle {
             Layout.alignment: Qt.AlignHCenter
             Layout.minimumWidth: implicitWidth
             Layout.minimumHeight: implicitHeight
-            name: "Параметрическое уравнение"
+            name: "Характеристическое уравнение"
             htmlFormula: root.solver.parametricHtml
         }
 

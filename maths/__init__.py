@@ -34,6 +34,8 @@ class SolutionResult:
     InvalidFirstPoint = 2
     InvalidSecondPoint = 3
     NoSolution = 4
+    NoFirstCoeffs = 5
+    NoSecondCoeffs = 6
 
     reason: int = Success
     description: str = ''

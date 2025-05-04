@@ -185,7 +185,7 @@ Rectangle {
             width: parent.width
             spacing: 3
             Label {
-                text: "Порядок"
+                text: "Номер"
             }
             TextField {
                 width: parent.width

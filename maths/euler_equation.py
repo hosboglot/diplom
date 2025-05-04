@@ -143,7 +143,7 @@ class EulerEquation:
                     Y = np.vstack((Y, [cond.y]))
                 case ExtraCondition.Type.Constant:
                     x = np.zeros(len(valid_roots))
-                    x[cond.order] = 1
+                    x[cond.order - 1] = 1
                     X = np.vstack((X, x))
                     Y = np.vstack((Y, [cond.constant]))
 
@@ -172,9 +172,11 @@ class EulerEquation:
 
         self._calculate_variadics()
         if self._first_variadics is None:
-            result.reason = SolutionResult.NoSolution
+            result.reason = SolutionResult.NoFirstCoeffs
+            result.description = '''Не удается определить коэффициенты первого решения.'''
         elif self._second_variadics is None:
-            result.reason = SolutionResult.NoSolution
+            result.reason = SolutionResult.NoSecondCoeffs
+            result.description = '''Не удается определить коэффициенты второго решения.'''
 
         return result
 

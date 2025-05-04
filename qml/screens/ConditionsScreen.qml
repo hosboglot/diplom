@@ -25,6 +25,7 @@ Rectangle {
                 Layout.fillWidth: true
                 Layout.margins: 7
                 horizontalAlignment: Label.AlignHCenter
+                textFormat: Label.RichText
                 text: "Коэффициенты в виде<br>∑a<sub>i</sub>x<sup>i</sup>y<sup>(i)</sup>"
             }
             FormulaView {
